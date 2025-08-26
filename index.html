@@ -35,23 +35,24 @@
   const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTMA-iDooRLuimcHGsb9FKSbtUmHy8y3zYbF5xXJN7wAx6pu69QPY1MqpFSFf4FZfp/exec';
 
   // 15 pairs
-  const trials = [
-    {id: "t01", real: "audio/real/001.wav", tts: "audio/fake/line1.wav"},
-    {id: "t02", real: "audio/real/002.wav", tts: "audio/fake/line2.wav"},
-    {id: "t03", real: "audio/real/003.wav", tts: "audio/fake/line3.wav"},
-    {id: "t04", real: "audio/real/004.wav", tts: "audio/fake/line4.wav"},
-    {id: "t05", real: "audio/real/005.wav", tts: "audio/fake/line5.wav"},
-    {id: "t06", real: "audio/real/006.wav", tts: "audio/fake/line6.wav"},
-    {id: "t07", real: "audio/real/007.wav", tts: "audio/fake/line7.wav"},
-    {id: "t08", real: "audio/real/008.wav", tts: "audio/fake/line8.wav"},
-    {id: "t09", real: "audio/real/009.wav", tts: "audio/fake/line9.wav"},
-    {id: "t10", real: "audio/real/010.wav", tts: "audio/fake/line10.wav"},
-    {id: "t11", real: "audio/real/011.wav", tts: "audio/fake/line11.wav"},
-    {id: "t12", real: "audio/real/012.wav", tts: "audio/fake/line12.wav"},
-    {id: "t13", real: "audio/real/013.wav", tts: "audio/fake/line13.wav"},
-    {id: "t14", real: "audio/real/014.wav", tts: "audio/fake/line14.wav"},
-    {id: "t15", real: "audio/real/015.wav", tts: "audio/fake/line15.wav"}
-  ];
+const trials = [
+  {id: "t01", real: "audio/real_norm/001.wav", tts: "audio/fake_norm/line1.wav"},
+  {id: "t02", real: "audio/real_norm/002.wav", tts: "audio/fake_norm/line2.wav"},
+  {id: "t03", real: "audio/real_norm/003.wav", tts: "audio/fake_norm/line3.wav"},
+  {id: "t04", real: "audio/real_norm/004.wav", tts: "audio/fake_norm/line4.wav"},
+  {id: "t05", real: "audio/real_norm/005.wav", tts: "audio/fake_norm/line5.wav"},
+  {id: "t06", real: "audio/real_norm/006.wav", tts: "audio/fake_norm/line6.wav"},
+  {id: "t07", real: "audio/real_norm/007.wav", tts: "audio/fake_norm/line7.wav"},
+  {id: "t08", real: "audio/real_norm/008.wav", tts: "audio/fake_norm/line8.wav"},
+  {id: "t09", real: "audio/real_norm/009.wav", tts: "audio/fake_norm/line9.wav"},
+  {id: "t10", real: "audio/real_norm/010.wav", tts: "audio/fake_norm/line10.wav"},
+  {id: "t11", real: "audio/real_norm/011.wav", tts: "audio/fake_norm/line11.wav"},
+  {id: "t12", real: "audio/real_norm/012.wav", tts: "audio/fake_norm/line12.wav"},
+  {id: "t13", real: "audio/real_norm/013.wav", tts: "audio/fake_norm/line13.wav"},
+  {id: "t14", real: "audio/real_norm/014.wav", tts: "audio/fake_norm/line14.wav"},
+  {id: "t15", real: "audio/real_norm/015.wav", tts: "audio/fake_norm/line15.wav"}
+];
+
 
   const container = document.getElementById("survey");
 
