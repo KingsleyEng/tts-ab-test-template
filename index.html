@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Real vs TTS Listening Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 2rem auto; line-height: 1.5; }
+    h2 { text-align: center; }
+    .trial { border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; border-radius: 6px; }
+    .options { margin-top: 0.5rem; }
+    .options label { margin-right: 1rem; }
+    audio { display: block; margin: 0.5rem 0; }
+    button { padding: 0.5rem 1rem; margin-top: 1rem; }
+    .note { color:#555; font-size: 0.9rem; margin-top:1rem; }
+    .success { color: green; }
+    .error { color: #b00020; }
+    .missing { border-color: #b00020; box-shadow: 0 0 0 2px rgba(176,0,32,.12); }
+  </style>
+</head>
+<body>
+  <h2>Real vs TTS Listening Test</h2>
+  <p>Please listen to each pair. <strong>Select which clip is REAL</strong> (Top or Bottom), or choose “I don't know”.</p>
+
+  <label>
+    Your alias: <input type="text" id="alias" placeholder="Enter your alias" required>
+  </label>
+
+  <div id="survey"></div>
+
+  <button id="submitBtn" onclick="submitResults()">Submit</button>
+  <div class="note" id="status"></div>
+
+<script>
+  // 🔗 Google Apps Script Web App URL
+  const SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTMA-iDooRLuimcHGsb9FKSbtUmHy8y3zYbF5xXJN7wAx6pu69QPY1MqpFSFf4FZfp/exec';
+
+  // 15 pairs
+  const trials = [
+    {id: "t01", real: "audio/real/001.wav", tts: "audio/fake/line1.wav"},
+    {id: "t02", real: "audio/real/002.wav", tts: "audio/fake/line2.wav"},
+    {id: "t03", real: "audio/real/003.wav", tts: "audio/fake/line3.wav"},
+    {id: "t04", real: "audio/real/004.wav", tts: "audio/fake/line4.wav"},
+    {id: "t05", real: "audio/real/005.wav", tts: "audio/fake/line5.wav"},
+    {id: "t06", real: "audio/real/006.wav", tts: "audio/fake/line6.wav"},
+    {id: "t07", real: "audio/real/007.wav", tts: "audio/fake/line7.wav"},
+    {id: "t08", real: "audio/real/008.wav", tts: "audio/fake/line8.wav"},
+    {id: "t09", real: "audio/real/009.wav", tts: "audio/fake/line9.wav"},
+    {id: "t10", real: "audio/real/010.wav", tts: "audio/fake/line10.wav"},
+    {id: "t11", real: "audio/real/011.wav", tts: "audio/fake/line11.wav"},
+    {id: "t12", real: "audio/real/012.wav", tts: "audio/fake/line12.wav"},
+    {id: "t13", real: "audio/real/013.wav", tts: "audio/fake/line13.wav"},
+    {id: "t14", real: "audio/real/014.wav", tts: "audio/fake/line14.wav"},
+    {id: "t15", real: "audio/real/015.wav", tts: "audio/fake/line15.wav"}
+  ];
+
+  const container = document.getElementById("survey");
+
+  // Track Top/Bottom labels & sources per trial
+  const topLabel   = {}; // { t01: 'real' | 'tts' }
+  const bottomLabel= {}; // { t01: 'real' | 'tts' }
+  const topSrc     = {}; // { t01: 'audio/...' }
+  const bottomSrc  = {}; // { t01: 'audio/...' }
+
+  // Build trials (randomise which is top/bottom)
+  trials.forEach((t,i) => {
+    const div = document.createElement("div");
+    div.className = "trial";
+    div.setAttribute('data-trial', t.id);
+
+    const pair = [
+      { label: 'real', src: t.real },
+      { label: 'tts',  src: t.tts  }
+    ];
+    if (Math.random() > 0.5) pair.reverse();
+
+    // Record mapping
+    topLabel[t.id]    = pair[0].label;
+    bottomLabel[t.id] = pair[1].label;
+    topSrc[t.id]      = pair[0].src;
+    bottomSrc[t.id]   = pair[1].src;
+
+    const players = `
+      <div><strong>Top:</strong> <audio controls src="${pair[0].src}"></audio></div>
+      <div><strong>Bottom:</strong> <audio controls src="${pair[1].src}"></audio></div>
+    `;
+
+    div.innerHTML = `
+      <h3>Trial ${i+1}</h3>
+      ${players}
+      <div class="options">
+        <label><input type="radio" name="${t.id}" value="Top"> Top is REAL</label>
+        <label><input type="radio" name="${t.id}" value="Bottom"> Bottom is REAL</label>
+        <label><input type="radio" name="${t.id}" value="Not sure"> I don't know</label>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  function submitResults(){
+    const alias = (document.getElementById("alias").value || "").trim();
+    const statusEl = document.getElementById("status");
+    if (!alias) {
+      alert("Please enter your alias before submitting.");
+      return;
+    }
+
+    // Require an answer for every trial
+    const unanswered = [];
+    trials.forEach(t => {
+      const selected = document.querySelector(`input[name="${t.id}"]:checked`);
+      const block = document.querySelector(`.trial[data-trial="${t.id}"]`);
+      if (!selected) {
+        unanswered.push(t.id);
+        block.classList.add('missing');
+      } else {
+        block.classList.remove('missing');
+      }
+    });
+
+    if (unanswered.length > 0) {
+      statusEl.innerHTML = `<span class="error">Please answer all items (${unanswered.length} missing). The first missing item has been highlighted.</span>`;
+      const first = document.querySelector(`.trial[data-trial="${unanswered[0]}"]`);
+      if (first) first.scrollIntoView({behavior: 'smooth', block: 'center'});
+      return;
+    }
+
+    // Build payload for Google Sheets (full detail + correctness)
+    const payload = trials.map(t => {
+      const selected = document.querySelector(`input[name="${t.id}"]:checked`).value; // 'Top' | 'Bottom' | 'Not sure'
+
+      // Correctness: Top is correct when Top actually = real; Bottom correct when Bottom actually = real
+      const isCorrect =
+        (selected === 'Top'    && topLabel[t.id] === 'real') ||
+        (selected === 'Bottom' && bottomLabel[t.id] === 'real')
+          ? 'Correct'
+          : 'Incorrect';
+
+      return {
+        alias: alias,
+        trial_id: t.id,
+        response: selected,            // 'Top' | 'Bottom' | 'Not sure'
+        top_label: topLabel[t.id],     // 'real' or 'tts'
+        bottom_label: bottomLabel[t.id],// 'real' or 'tts'
+        top_src: topSrc[t.id],
+        bottom_src: bottomSrc[t.id],
+        is_correct: selected === 'Not sure' ? 'Incorrect' : isCorrect
+      };
+    });
+
+    // Send to Google Sheets
+    statusEl.textContent = "Submitting… please wait.";
+    fetch(SHEETS_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).catch(() => {
+      // even if it errors in the browser due to no-cors, Apps Script still receives it
+    }).finally(() => {
+      statusEl.innerHTML = "<span class='success'>✅ Submitted! Thank you — a backup CSV has been downloaded.</span>";
+
+      // Download a minimal CSV for the participant
+      let rows = [["Alias","TrialID","Response"]];
+      payload.forEach(r => rows.push([r.alias, r.trial_id, r.response]));
+
+      const csv = rows.map(r => r.join(",")).join("\n");
+      const blob = new Blob([csv], {type: "text/csv"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = alias + "_results.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      document.getElementById("submitBtn").disabled = true;
+    });
+  }
+</script>
+
+</body>
+</html>
